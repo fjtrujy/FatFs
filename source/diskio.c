@@ -7,13 +7,13 @@
 /* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
 
+#include <bdm.h>
+#include <cdvdman.h>
+
 #include "ff.h"			/* Obtains integer types */
 #include "diskio.h"		/* Declarations of disk functions */
+#include "fs_driver.h"  /* Declarations of fs driver functions */
 
-/* Definitions of physical drive number for each drive */
-#define DEV_RAM		0	/* Example: Map Ramdisk to physical drive 0 */
-#define DEV_MMC		1	/* Example: Map MMC/SD card to physical drive 1 */
-#define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
 
 
 /*-----------------------------------------------------------------------*/
@@ -24,32 +24,11 @@ DSTATUS disk_status (
 	BYTE pdrv		/* Physical drive nmuber to identify the drive */
 )
 {
-	DSTATUS stat;
 	int result;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		result = RAM_disk_status();
+	result = (fatfs_fs_driver_get_mounted_bd_from_index(pdrv) == NULL) ? (STA_NOINIT | STA_NODISK) : 0;
 
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_MMC :
-		result = MMC_disk_status();
-
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_USB :
-		result = USB_disk_status();
-
-		// translate the reslut code here
-
-		return stat;
-	}
-	return STA_NOINIT;
+	return result;
 }
 
 
@@ -62,32 +41,11 @@ DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber to identify the drive */
 )
 {
-	DSTATUS stat;
 	int result;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		result = RAM_disk_initialize();
+	result = (fatfs_fs_driver_get_mounted_bd_from_index(pdrv) == NULL) ? (STA_NOINIT | STA_NODISK) : 0;
 
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_MMC :
-		result = MMC_disk_initialize();
-
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_USB :
-		result = USB_disk_initialize();
-
-		// translate the reslut code here
-
-		return stat;
-	}
-	return STA_NOINIT;
+	return result;
 }
 
 
@@ -104,38 +62,17 @@ DRESULT disk_read (
 )
 {
 	DRESULT res;
-	int result;
+	struct block_device *mounted_bd;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		// translate the arguments here
+	mounted_bd = fatfs_fs_driver_get_mounted_bd_from_index(pdrv);
 
-		result = RAM_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-
-	case DEV_MMC :
-		// translate the arguments here
-
-		result = MMC_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-
-	case DEV_USB :
-		// translate the arguments here
-
-		result = USB_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
+	if (mounted_bd == NULL) {
+		return RES_NOTRDY;
 	}
 
-	return RES_PARERR;
+	res = mounted_bd->read(mounted_bd, sector, buff, count);
+
+	return (res == count) ? RES_OK : RES_ERROR;
 }
 
 
@@ -154,38 +91,17 @@ DRESULT disk_write (
 )
 {
 	DRESULT res;
-	int result;
+	struct block_device *mounted_bd;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		// translate the arguments here
+	mounted_bd = fatfs_fs_driver_get_mounted_bd_from_index(pdrv);
 
-		result = RAM_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-
-	case DEV_MMC :
-		// translate the arguments here
-
-		result = MMC_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-
-	case DEV_USB :
-		// translate the arguments here
-
-		result = USB_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
+	if (mounted_bd == NULL) {
+		return RES_NOTRDY;
 	}
 
-	return RES_PARERR;
+	res = mounted_bd->write(mounted_bd, sector, buff, count);
+
+	return (res == count) ? RES_OK : RES_ERROR;
 }
 
 #endif
@@ -201,29 +117,56 @@ DRESULT disk_ioctl (
 	void *buff		/* Buffer to send/receive control data */
 )
 {
-	DRESULT res;
-	int result;
+	struct block_device *mounted_bd;
 
-	switch (pdrv) {
-	case DEV_RAM :
+	mounted_bd = fatfs_fs_driver_get_mounted_bd_from_index(pdrv);
 
-		// Process of the command for the RAM drive
-
-		return res;
-
-	case DEV_MMC :
-
-		// Process of the command for the MMC/SD card
-
-		return res;
-
-	case DEV_USB :
-
-		// Process of the command the USB drive
-
-		return res;
+	if (mounted_bd == NULL) {
+		return RES_NOTRDY;
 	}
 
-	return RES_PARERR;
+	switch (cmd) {
+		case CTRL_SYNC:
+			mounted_bd->flush(mounted_bd);
+			break;
+		case GET_SECTOR_COUNT:
+			*(unsigned int *)buff = mounted_bd->sectorCount;
+			break;
+		case GET_SECTOR_SIZE:
+			*(unsigned int *)buff = mounted_bd->sectorSize;
+			break;
+		case GET_BLOCK_SIZE:
+			*(unsigned int *)buff = 0;
+			break;
+		default:
+			return RES_PARERR;
+	}
+
+	return RES_OK;
 }
 
+DWORD get_fattime(void)
+{
+	// ps2 specific routine to get time and date
+	int year, month, day, hour, minute, sec;
+	sceCdCLOCK cdtime;
+
+	if (sceCdReadClock(&cdtime) != 0 && cdtime.stat == 0) {
+		sec = btoi(cdtime.second);
+		minute = btoi(cdtime.minute);
+		hour = btoi(cdtime.hour);
+		day = btoi(cdtime.day);
+		month = btoi(cdtime.month & 0x7F); // Ignore century bit (when an old CDVDMAN is used).
+		year = btoi(cdtime.year) + 2000;
+	} else {
+		year = 2005;
+		month = 1;
+		day = 6;
+		hour = 14;
+		minute = 12;
+		sec = 10;
+	}
+
+	/* Pack date and time into a DWORD variable */
+	return ((DWORD)(year - 1980) << 25) | ((DWORD)month << 21) | ((DWORD)day << 16) | ((DWORD)hour << 11) | ((DWORD)minute << 5) | ((DWORD)sec >> 1);
+}
