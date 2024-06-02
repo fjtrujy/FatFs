@@ -88,6 +88,7 @@
 #else
 #define FF_CODE_PAGE	932
 #endif
+
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect code page setting can cause a file open failure.
 /
@@ -186,6 +187,7 @@
 #define FF_STR_VOLUME_ID	0
 #define FF_VOLUME_STRS		"RAM","NAND","CF","SD","SD2","USB","USB2","USB3"
 #endif
+
 /* FF_STR_VOLUME_ID switches support for volume ID in arbitrary strings.
 /  When FF_STR_VOLUME_ID is set to 1 or 2, arbitrary strings can be used as drive
 /  number in the path name. FF_VOLUME_STRS defines the volume ID strings for each
@@ -221,6 +223,7 @@
 #else
 #define FF_LBA64		0
 #endif
+
 /* This option switches support for 64-bit LBA. (0:Disable or 1:Enable)
 /  To enable the 64-bit LBA, also exFAT needs to be enabled. (FF_FS_EXFAT == 1) */
 
@@ -256,6 +259,7 @@
 #else
 #define FF_FS_EXFAT		0
 #endif
+
 /* This option switches support for exFAT filesystem. (0:Disable or 1:Enable)
 /  To enable exFAT, also LFN needs to be enabled. (FF_USE_LFN >= 1)
 /  Note that enabling exFAT discards ANSI C (C89) compatibility. */
@@ -303,6 +307,7 @@
 #else
 #define FF_FS_REENTRANT	0
 #endif
+
 #define FF_FS_TIMEOUT	1000
 /* The option FF_FS_REENTRANT switches the re-entrancy (thread safe) of the FatFs
 /  module itself. Note that regardless of this option, file access to different
@@ -318,7 +323,7 @@
 /  The FF_FS_TIMEOUT defines timeout period in unit of O/S time tick.
 */
 
-#ifndef __PS2SDK_IOP__
+#ifdef __PS2SDK_IOP__
 #define FF_FS_MBR 0
 /* This option switches support for MBR partition table. (0:Disable or 1:Enable) */
 #endif

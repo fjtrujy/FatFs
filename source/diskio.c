@@ -11,6 +11,9 @@
 #include <cdvdman.h>
 #endif
 
+#include <bdm.h>
+#include <cdvdman.h>
+
 #include "ff.h"			/* Obtains integer types */
 #include "diskio.h"		/* Declarations of disk functions */
 #ifdef __PS2SDK_IOP__
@@ -21,7 +24,6 @@
 #define DEV_MMC		1	/* Example: Map MMC/SD card to physical drive 1 */
 #define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
 #endif
-
 
 
 /*-----------------------------------------------------------------------*/
