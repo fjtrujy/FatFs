@@ -83,12 +83,8 @@
 /*---------------------------------------------------------------------------/
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
-#ifdef __PS2SDK_IOP__
-#define FF_CODE_PAGE	869
-#else
-#define FF_CODE_PAGE	932
-#endif
 
+#define FF_CODE_PAGE	869
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect code page setting can cause a file open failure.
 /
@@ -116,11 +112,8 @@
 /     0 - Include all code pages above and configured by f_setcp()
 */
 
-#ifdef __PS2SDK_IOP__
+
 #define FF_USE_LFN		2
-#else
-#define FF_USE_LFN		0
-#endif
 #define FF_MAX_LFN		255
 /* The FF_USE_LFN switches the support for LFN (long file name).
 /
@@ -173,21 +166,12 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
-#ifdef __PS2SDK_IOP__
 #define FF_VOLUMES		10
-#else
-#define FF_VOLUMES		1
-#endif
 /* Number of volumes (logical drives) to be used. (1-10) */
 
-#ifdef __PS2SDK_IOP__
+
 #define FF_STR_VOLUME_ID	1
 #define FF_VOLUME_STRS		"mass"
-#else
-#define FF_STR_VOLUME_ID	0
-#define FF_VOLUME_STRS		"RAM","NAND","CF","SD","SD2","USB","USB2","USB3"
-#endif
-
 /* FF_STR_VOLUME_ID switches support for volume ID in arbitrary strings.
 /  When FF_STR_VOLUME_ID is set to 1 or 2, arbitrary strings can be used as drive
 /  number in the path name. FF_VOLUME_STRS defines the volume ID strings for each
@@ -218,12 +202,8 @@
 /  for variable sector size mode and disk_ioctl() function needs to implement
 /  GET_SECTOR_SIZE command. */
 
-#ifdef __PS2SDK_IOP__
-#define FF_LBA64		1
-#else
-#define FF_LBA64		0
-#endif
 
+#define FF_LBA64		1
 /* This option switches support for 64-bit LBA. (0:Disable or 1:Enable)
 /  To enable the 64-bit LBA, also exFAT needs to be enabled. (FF_FS_EXFAT == 1) */
 
@@ -244,22 +224,14 @@
 / System Configurations
 /---------------------------------------------------------------------------*/
 
-#ifdef __PS2SDK_IOP__
 #define FF_FS_TINY		1
-#else
-#define FF_FS_TINY		0
-#endif
 /* This option switches tiny buffer configuration. (0:Normal or 1:Tiny)
 /  At the tiny configuration, size of file object (FIL) is shrinked FF_MAX_SS bytes.
 /  Instead of private sector buffer eliminated from the file object, common sector
 /  buffer in the filesystem object (FATFS) is used for the file data transfer. */
 
-#ifdef __PS2SDK_IOP__
-#define FF_FS_EXFAT		1
-#else
-#define FF_FS_EXFAT		0
-#endif
 
+#define FF_FS_EXFAT		1
 /* This option switches support for exFAT filesystem. (0:Disable or 1:Enable)
 /  To enable exFAT, also LFN needs to be enabled. (FF_USE_LFN >= 1)
 /  Note that enabling exFAT discards ANSI C (C89) compatibility. */
@@ -302,12 +274,8 @@
 /      can be opened simultaneously under file lock control. Note that the file
 /      lock control is independent of re-entrancy. */
 
-#ifdef __PS2SDK_IOP__
-#define FF_FS_REENTRANT	1
-#else
-#define FF_FS_REENTRANT	0
-#endif
 
+#define FF_FS_REENTRANT	1
 #define FF_FS_TIMEOUT	1000
 /* The option FF_FS_REENTRANT switches the re-entrancy (thread safe) of the FatFs
 /  module itself. Note that regardless of this option, file access to different
@@ -323,9 +291,8 @@
 /  The FF_FS_TIMEOUT defines timeout period in unit of O/S time tick.
 */
 
-#ifdef __PS2SDK_IOP__
+
 #define FF_FS_MBR 0
 /* This option switches support for MBR partition table. (0:Disable or 1:Enable) */
-#endif
 
 /*--- End of configuration options ---*/

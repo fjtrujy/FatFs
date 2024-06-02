@@ -20,14 +20,10 @@
 
 
 #include <string.h>
-#ifdef __PS2SDK_IOP__
 #include <stdio.h>
-#endif
 #include "ff.h"			/* Declarations of FatFs API */
 #include "diskio.h"		/* Declarations of device I/O functions */
-#ifdef __PS2SDK_IOP__
 #include "module_debug.h"
-#endif
 
 /*--------------------------------------------------------------------------
 
@@ -1145,17 +1141,11 @@ static FRESULT sync_fs (	/* Returns FR_OK or FR_DISK_ERR */
 /*-----------------------------------------------------------------------*/
 /* Get physical sector number from cluster number                        */
 /*-----------------------------------------------------------------------*/
-#ifdef __PS2SDK_IOP__
+
 LBA_t clst2sect (	/* !=0:Sector number, 0:Failed (invalid cluster#) */
 	FATFS* fs,		/* Filesystem object */
 	DWORD clst		/* Cluster# to be converted */
 )
-#else
-static LBA_t clst2sect (	/* !=0:Sector number, 0:Failed (invalid cluster#) */
-	FATFS* fs,		/* Filesystem object */
-	DWORD clst		/* Cluster# to be converted */
-)
-#endif
 {
 	clst -= 2;		/* Cluster number is origin from 2 */
 	if (clst >= fs->n_fatent - 2) return 0;		/* Is it invalid cluster number? */
@@ -1168,15 +1158,10 @@ static LBA_t clst2sect (	/* !=0:Sector number, 0:Failed (invalid cluster#) */
 /*-----------------------------------------------------------------------*/
 /* FAT access - Read value of an FAT entry                               */
 /*-----------------------------------------------------------------------*/
-#ifdef __PS2SDK_IOP_
+
 DWORD get_fat (		/* 0xFFFFFFFF:Disk error, 1:Internal error, 2..0x7FFFFFFF:Cluster status */
 	FFOBJID* obj,	/* Corresponding object */
 	DWORD clst		/* Cluster number to get the value */
-#else
-static DWORD get_fat (		/* 0xFFFFFFFF:Disk error, 1:Internal error, 2..0x7FFFFFFF:Cluster status */
-	FFOBJID* obj,	/* Corresponding object */
-	DWORD clst		/* Cluster number to get the value */
-#endif
 )
 {
 	UINT wc, bc;
@@ -3458,18 +3443,13 @@ static FRESULT mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 
 	/* Find an FAT volume on the hosting drive */
 	fmt = find_volume(fs, LD2PT(vol));
-#ifdef __PS2SDK_IOP__
 	u64 winsect = fs->winsect;
 	DEBUG_U64_2XU32(winsect);
 	M_DEBUG("check_fs returned %d at LBA 0x%08x%08x\n", fmt, winsect_u32[1], winsect_u32[0]);
-#endif
 	if (fmt == 4) return FR_DISK_ERR;		/* An error occurred in the disk I/O layer */
 	if (fmt >= 2) return FR_NO_FILESYSTEM;	/* No FAT volume is found */
-#ifdef __PS2SDK_IOP__
-	bsect = winsect;					/* Volume offset in the hosting physical drive */
-#else
-	bsect = fs->winsect;					/* Volume offset in the hosting physical drive */
-#endif					/* Volume offset in the hosting physical drive */
+
+	bsect = winsect;				/* Volume offset in the hosting physical drive */					
 
 	/* An FAT volume is found (bsect). Following code initializes the filesystem object */
 
