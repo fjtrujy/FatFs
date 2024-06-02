@@ -20,13 +20,14 @@
 
 
 #include <string.h>
+#ifdef __PS2SDK_IOP__
 #include <stdio.h>
+#endif
 #include "ff.h"			/* Declarations of FatFs API */
 #include "diskio.h"		/* Declarations of device I/O functions */
+#ifdef __PS2SDK_IOP__
 #include "module_debug.h"
-
-#define U64_2XU32(val)  ((u32*)val)[1], ((u32*)val)[0]
-
+#endif
 
 /*--------------------------------------------------------------------------
 
@@ -3458,11 +3459,17 @@ static FRESULT mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 	/* Find an FAT volume on the hosting drive */
 	fmt = find_volume(fs, LD2PT(vol));
 #ifdef __PS2SDK_IOP__
-	M_DEBUG("check_fs returned %d at LBA 0x%08x%08x\n", fmt, U64_2XU32(&fs->winsect));
+	u64 winsect = fs->winsect;
+	DEBUG_U64_2XU32(winsect);
+	M_DEBUG("check_fs returned %d at LBA 0x%08x%08x\n", fmt, winsect_u32[1], winsect_u32[0]);
 #endif
 	if (fmt == 4) return FR_DISK_ERR;		/* An error occurred in the disk I/O layer */
 	if (fmt >= 2) return FR_NO_FILESYSTEM;	/* No FAT volume is found */
+#ifdef __PS2SDK_IOP__
+	bsect = winsect;					/* Volume offset in the hosting physical drive */
+#else
 	bsect = fs->winsect;					/* Volume offset in the hosting physical drive */
+#endif					/* Volume offset in the hosting physical drive */
 
 	/* An FAT volume is found (bsect). Following code initializes the filesystem object */
 
